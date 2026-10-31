@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f3f7fc"><title>Pine Lake Student Check-In</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1d2939;background:#f3f7fc}*{box-sizing:border-box}body{margin:0}button,input{font:inherit}button{cursor:pointer}
+header{background:#fff;border-bottom:1px solid #e1e8f0;padding:16px max(16px,calc((100vw - 920px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;border-radius:14px;background:#e7f1ff;color:#1769c2;display:grid;place-items:center;font-size:25px;font-weight:800}h1{font-size:20px;margin:0}.sub{font-size:13px;color:#68778d;margin-top:3px}
+main{max-width:920px;margin:auto;padding:22px 16px 36px}.admin,.soft,.primary,.danger{border:0;border-radius:11px;padding:11px 15px;font-weight:700}.admin,.soft{background:#edf2f7;color:#27364c}.primary{background:#1769c2;color:#fff}.danger{background:#fff0ed;color:#9f342a}
+.filter{background:white;border:1px solid #e1e8f0;border-radius:17px;padding:16px;display:grid;gap:13px}.search{width:100%;border:1px solid #d4ddea;border-radius:11px;padding:13px 14px;background:#fbfcfe;outline:none}.search:focus,input:focus{border-color:#1769c2;box-shadow:0 0 0 3px #1769c21a}
+.letters{display:flex;gap:6px;flex-wrap:wrap}.letter{height:35px;min-width:34px;border:0;border-radius:9px;background:#f0f3f7;color:#46546a;font-weight:750}.letter.active{background:#1769c2;color:white}.letter:disabled{opacity:.32}
+.meta{display:flex;justify-content:space-between;color:#68778d;font-size:14px;padding:15px 2px 10px}.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:11px}
+.student{width:100%;min-height:74px;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;border:1px solid #e1e8f0;border-radius:15px;background:white;padding:15px;box-shadow:0 3px 10px #1d355708}.student:active{transform:scale(.985)}.student strong{font-size:16px}.pill{font-size:11px;font-weight:800;border-radius:999px;padding:6px 9px;background:#edf1f5;color:#5b687b;white-space:nowrap}.student.checked .pill{background:#e3f6ec;color:#167448}.empty{grid-column:1/-1;text-align:center;padding:38px 18px;color:#69768a;background:white;border:1px dashed #cdd7e4;border-radius:15px}
+dialog{border:0;border-radius:19px;padding:0;width:min(600px,calc(100% - 24px));max-height:90vh;color:#1d2939;box-shadow:0 20px 70px #14213d55}dialog::backdrop{background:#13213a88;backdrop-filter:blur(2px)}.head{display:flex;justify-content:space-between;align-items:center;padding:17px 20px;border-bottom:1px solid #e4eaf1}.head h2{margin:0;font-size:20px}.close{border:0;background:#f0f3f7;border-radius:9px;width:36px;height:36px;font-size:22px}.body{padding:18px 20px;overflow:auto;max-height:72vh}.row{display:flex;gap:8px;flex-wrap:wrap}.notice{font-size:13px;line-height:1.5;color:#68778d;margin:13px 0}.field{display:grid;gap:6px;margin:13px 0}.field label{font-size:13px;font-weight:700;color:#4c5a70}.field input{border:1px solid #d4ddea;border-radius:10px;padding:12px}.listrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #edf1f5}.listrow:last-child{border:0}.listrow .tools{display:flex;gap:6px}.small{border:0;border-radius:9px;padding:8px 10px;background:#edf2f7;color:#26354b;font-weight:700}.error{color:#a5332b;font-size:13px;min-height:18px}#toast{position:fixed;bottom:max(18px,env(safe-area-inset-bottom));left:50%;transform:translate(-50%,18px);opacity:0;transition:.18s;pointer-events:none;background:#192639;color:white;border-radius:99px;padding:12px 17px;font-weight:700;box-shadow:0 6px 20px #0002;max-width:90vw;text-align:center}#toast.show{opacity:1;transform:translate(-50%,0)}
+@media(min-width:650px){main{padding-top:28px}.cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="logo" aria-hidden="true">✓</div><div><h1>Pine Lake Student Check-In</h1><div class="sub">Tap your name to check in or check out</div></div></div><button class="admin" id="adminBtn">Admin</button></header>
+<main><section class="filter"><input class="search" id="search" type="search" placeholder="Search students…" aria-label="Search students" autocomplete="off"><div class="letters" id="letters" aria-label="Filter by first letter"></div></section><div class="meta"><span id="count">0 students</span><span id="today"></span></div><section id="cards" class="cards" aria-live="polite"></section></main>
+<dialog id="auth"><div class="head"><h2 id="authTitle">Admin</h2><button class="close" data-close="auth">×</button></div><div class="body" id="authBody"></div></dialog>
+<dialog id="panel"><div class="head"><h2>Admin</h2><button class="close" data-close="panel">×</button></div><div class="body" id="panelBody"></div></dialog>
+<dialog id="studentDialog"><div class="head"><h2 id="studentTitle">Add student</h2><button class="close" data-close="studentDialog">×</button></div><div class="body"><form id="studentForm"><input id="studentId" type="hidden"><div class="field"><label for="studentName">Student name</label><input id="studentName" maxlength="80" required autocomplete="off"></div><div class="error" id="studentError"></div><div class="row"><button class="primary" type="submit">Save student</button><button class="soft" type="button" data-close="studentDialog">Cancel</button></div></form></div></dialog>
+<div id="toast" role="status"></div>
+<script>
+const K={students:"plsc.students.v1",attendance:"plsc.attendance.v1",pass:"plsc.pass.v1"};
+const $=id=>document.getElementById(id);
+const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}};
+const write=(key,data)=>localStorage.setItem(key,JSON.stringify(data));
+let students=read(K.students,[]), attendance=read(K.attendance,[]), alpha="ALL", query="";
+$("today").textContent=new Intl.DateTimeFormat(undefined,{weekday:"short",month:"short",day:"numeric"}).format(new Date());
+function sorted(){return [...students].sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:"base"}))}
+function first(name){return (name.trim()[0]||"").toLocaleUpperCase()}
+function toast(msg){const el=$("toast");el.textContent=msg;el.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("show"),1800)}
+function render(){
+ students=read(K.students,[]);attendance=read(K.attendance,[]);
+ const letters=$("letters");letters.innerHTML="";
+ const all=document.createElement("button");all.className="letter"+(alpha==="ALL"?" active":"");all.textContent="All";all.onclick=()=>{alpha="ALL";render()};letters.append(all);
+ for(let n=65;n<=90;n++){const ch=String.fromCharCode(n),b=document.createElement("button");b.className="letter"+(alpha===ch?" active":"");b.textContent=ch;b.disabled=!students.some(s=>first(s.name)===ch);b.onclick=()=>{alpha=ch;render()};letters.append(b)}
+ const shown=sorted().filter(s=>(alpha==="ALL"||first(s.name)===alpha)&&s.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
+ $("count").textContent=shown.length+" student"+(shown.length===1?"":"s");const host=$("cards");host.innerHTML="";
+ if(!shown.length){const e=document.createElement("div");e.className="empty";e.textContent=students.length?"No matching students. Try another letter or search.":"Ask an administrator to add students.";host.append(e);return}
+ for(const s of shown){const inNow=attendance.some(a=>a.studentId===s.id&&!a.checkOut);const b=document.createElement("button");b.className="student"+(inNow?" checked":"");b.type="button";b.setAttribute("aria-label",s.name+(inNow?", checked in, tap to check out":", checked out, tap to check in"));const name=document.createElement("strong");name.textContent=s.name;const pill=document.createElement("span");pill.className="pill";pill.textContent=inNow?"CHECKED IN":"CHECKED OUT";b.append(name,pill);b.onclick=()=>toggle(s);host.append(b)}
+}
+function toggle(s){const open=attendance.find(a=>a.studentId===s.id&&!a.checkOut),now=new Date().toISOString();if(open){open.checkOut=now;toast(s.name+" checked out")}else{attendance.unshift({id:crypto.randomUUID(),studentId:s.id,studentName:s.name,checkIn:now,checkOut:""});toast(s.name+" checked in")}write(K.attendance,attendance);render()}
+$("search").oninput=e=>{query=e.target.value.trim();render()};
+function csv(){const rows=[["Student","Check-in","Check-out"],...attendance.map(a=>[a.studentName,a.checkIn,a.checkOut||""])];const data=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\r\n");download("pine-lake-attendance-"+day()+".csv","text/csv;charset=utf-8",data)}
+function day(){return new Date().toISOString().slice(0,10)}
+function download(name,type,data){const url=URL.createObjectURL(new Blob([data],{type})),a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function backup(){download("pine-lake-backup-"+day()+".json","application/json",JSON.stringify({exportedAt:new Date().toISOString(),students,attendance},null,2))}
+function panel(){
+ $("panelBody").innerHTML='<div class="row"><button class="primary" id="add">Add student</button><button class="soft" id="csv">Download attendance CSV</button><button class="soft" id="backup">Download full JSON backup</button></div><p class="notice">Data is saved only in this tablet’s browser. Download a JSON backup before clearing browser data or changing tablets. The passcode only hides admin controls here; it is not server-side security.</p><h3>Students ('+students.length+')</h3><div id="studentList"></div>';
+ $("add").onclick=()=>editStudent();$("csv").onclick=csv;$("backup").onclick=backup;
+ const list=$("studentList");sorted().forEach(s=>{const row=document.createElement("div");row.className="listrow";const n=document.createElement("strong");n.textContent=s.name;const tools=document.createElement("div");tools.className="tools";const e=document.createElement("button");e.className="small";e.textContent="Edit";e.onclick=()=>editStudent(s);const d=document.createElement("button");d.className="small";d.textContent="Delete";d.onclick=()=>removeStudent(s);tools.append(e,d);row.append(n,tools);list.append(row)})
+}
+function editStudent(s=null){$("studentTitle").textContent=s?"Edit student":"Add student";$("studentId").value=s?.id||"";$("studentName").value=s?.name||"";$("studentError").textContent="";$("studentDialog").showModal();setTimeout(()=>$("studentName").focus(),40)}
+$("studentForm").onsubmit=e=>{e.preventDefault();const name=$("studentName").value.trim().replace(/\s+/g," "),id=$("studentId").value;if(!name)return;if(students.some(s=>s.name.toLocaleLowerCase()===name.toLocaleLowerCase()&&s.id!==id)){$("studentError").textContent="That student is already listed.";return}
+ if(id){students=students.map(s=>s.id===id?{...s,name}:s);attendance=attendance.map(a=>a.studentId===id?{...a,studentName:name}:a)}else students.push({id:crypto.randomUUID(),name});
+ write(K.students,students);write(K.attendance,attendance);$("studentDialog").close();render();panel();toast(id?"Student updated":"Student added")}
+function removeStudent(s){if(!confirm("Remove "+s.name+" from the current student list? Past attendance will remain in downloads."))return;students=students.filter(x=>x.id!==s.id);write(K.students,students);render();panel();toast("Student removed")}
+async function hash(value){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+function openAdmin(){
+ const setup=!localStorage.getItem(K.pass);$("authTitle").textContent=setup?"Set admin passcode":"Admin passcode";
+ $("authBody").innerHTML='<form id="authForm"><div class="field"><label for="pass">'+(setup?"Create passcode (4–12 characters)":"Enter passcode")+'</label><input id="pass" type="password" required minlength="'+(setup?4:1)+'" maxlength="12" autocomplete="current-password"></div>'+(setup?'<div class="field"><label for="again">Confirm passcode</label><input id="again" type="password" required minlength="4" maxlength="12" autocomplete="new-password"></div>':'')+'<div class="error" id="authError"></div><button class="primary" type="submit">'+(setup?"Save passcode":"Unlock admin")+'</button></form>';
+ $("authForm").onsubmit=async e=>{e.preventDefault();const value=$("pass").value;if(setup){if(value!==$("again").value){$("authError").textContent="Passcodes do not match.";return}localStorage.setItem(K.pass,await hash(value));$("auth").close();panel();$("panel").showModal()}else if(await hash(value)===localStorage.getItem(K.pass)){$("auth").close();panel();$("panel").showModal()}else $("authError").textContent="Incorrect passcode."};
+ $("auth").showModal();setTimeout(()=>$("pass").focus(),40)
+}
+$("adminBtn").onclick=openAdmin;
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$(b.dataset.close).close());
+render();
+</script>
+</body></html>

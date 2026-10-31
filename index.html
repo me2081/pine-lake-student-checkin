@@ -12,62 +12,118 @@ main{max-width:920px;margin:auto;padding:22px 16px 36px}.admin,.soft,.primary,.d
 .letters{display:flex;gap:6px;flex-wrap:wrap}.letter{height:35px;min-width:34px;border:0;border-radius:9px;background:#f0f3f7;color:#46546a;font-weight:750}.letter.active{background:#1769c2;color:white}.letter:disabled{opacity:.32}
 .meta{display:flex;justify-content:space-between;color:#68778d;font-size:14px;padding:15px 2px 10px}.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:11px}
 .student{width:100%;min-height:74px;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;border:1px solid #e1e8f0;border-radius:15px;background:white;padding:15px;box-shadow:0 3px 10px #1d355708}.student:active{transform:scale(.985)}.student strong{font-size:16px}.pill{font-size:11px;font-weight:800;border-radius:999px;padding:6px 9px;background:#edf1f5;color:#5b687b;white-space:nowrap}.student.checked .pill{background:#e3f6ec;color:#167448}.empty{grid-column:1/-1;text-align:center;padding:38px 18px;color:#69768a;background:white;border:1px dashed #cdd7e4;border-radius:15px}
-dialog{border:0;border-radius:19px;padding:0;width:min(600px,calc(100% - 24px));max-height:90vh;color:#1d2939;box-shadow:0 20px 70px #14213d55}dialog::backdrop{background:#13213a88;backdrop-filter:blur(2px)}.head{display:flex;justify-content:space-between;align-items:center;padding:17px 20px;border-bottom:1px solid #e4eaf1}.head h2{margin:0;font-size:20px}.close{border:0;background:#f0f3f7;border-radius:9px;width:36px;height:36px;font-size:22px}.body{padding:18px 20px;overflow:auto;max-height:72vh}.row{display:flex;gap:8px;flex-wrap:wrap}.notice{font-size:13px;line-height:1.5;color:#68778d;margin:13px 0}.field{display:grid;gap:6px;margin:13px 0}.field label{font-size:13px;font-weight:700;color:#4c5a70}.field input{border:1px solid #d4ddea;border-radius:10px;padding:12px}.listrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #edf1f5}.listrow:last-child{border:0}.listrow .tools{display:flex;gap:6px}.small{border:0;border-radius:9px;padding:8px 10px;background:#edf2f7;color:#26354b;font-weight:700}.error{color:#a5332b;font-size:13px;min-height:18px}#toast{position:fixed;bottom:max(18px,env(safe-area-inset-bottom));left:50%;transform:translate(-50%,18px);opacity:0;transition:.18s;pointer-events:none;background:#192639;color:white;border-radius:99px;padding:12px 17px;font-weight:700;box-shadow:0 6px 20px #0002;max-width:90vw;text-align:center}#toast.show{opacity:1;transform:translate(-50%,0)}
+dialog{border:0;border-radius:19px;padding:0;width:min(600px,calc(100% - 24px));max-height:90vh;color:#1d2939;box-shadow:0 20px 70px #14213d55}dialog::backdrop{background:#13213a88;backdrop-filter:blur(2px)}.head{display:flex;justify-content:space-between;align-items:center;padding:17px 20px;border-bottom:1px solid #e4eaf1}.head h2{margin:0;font-size:20px}.close{border:0;background:#f0f3f7;border-radius:9px;width:36px;height:36px;font-size:22px}.body{padding:18px 20px;overflow:auto;max-height:72vh}.row{display:flex;gap:8px;flex-wrap:wrap}.notice{font-size:13px;line-height:1.5;color:#68778d;margin:13px 0}.field{display:grid;gap:6px;margin:13px 0}.field label{font-size:13px;font-weight:700;color:#4c5a70}.field input{border:1px solid #d4ddea;border-radius:10px;padding:12px;width:100%}.listrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #edf1f5}.listrow:last-child{border:0}.listrow .tools{display:flex;gap:6px}.small{border:0;border-radius:9px;padding:8px 10px;background:#edf2f7;color:#26354b;font-weight:700}.error{color:#a5332b;font-size:13px;min-height:18px}#toast{position:fixed;bottom:max(18px,env(safe-area-inset-bottom));left:50%;transform:translate(-50%,18px);opacity:0;transition:.18s;pointer-events:none;background:#192639;color:white;border-radius:99px;padding:12px 17px;font-weight:700;box-shadow:0 6px 20px #0002;max-width:90vw;text-align:center}#toast.show{opacity:1;transform:translate(-50%,0)}
 @media(min-width:650px){main{padding-top:28px}.cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:430px){header{padding:12px}.brand{gap:8px}h1{font-size:17px}.logo{width:38px;height:38px}.admin{padding:10px 12px}.body{padding:16px}.row>.primary,.row>.soft{flex:1}}
 </style>
 </head>
 <body>
-<header><div class="brand"><div class="logo" aria-hidden="true">✓</div><div><h1>Pine Lake Student Check-In</h1><div class="sub">Tap your name to check in or check out</div></div></div><button class="admin" id="adminBtn">Admin</button></header>
-<main><section class="filter"><input class="search" id="search" type="search" placeholder="Search students…" aria-label="Search students" autocomplete="off"><div class="letters" id="letters" aria-label="Filter by first letter"></div></section><div class="meta"><span id="count">0 students</span><span id="today"></span></div><section id="cards" class="cards" aria-live="polite"></section></main>
-<dialog id="auth"><div class="head"><h2 id="authTitle">Admin</h2><button class="close" data-close="auth">×</button></div><div class="body" id="authBody"></div></dialog>
-<dialog id="panel"><div class="head"><h2>Admin</h2><button class="close" data-close="panel">×</button></div><div class="body" id="panelBody"></div></dialog>
-<dialog id="studentDialog"><div class="head"><h2 id="studentTitle">Add student</h2><button class="close" data-close="studentDialog">×</button></div><div class="body"><form id="studentForm"><input id="studentId" type="hidden"><div class="field"><label for="studentName">Student name</label><input id="studentName" maxlength="80" required autocomplete="off"></div><div class="error" id="studentError"></div><div class="row"><button class="primary" type="submit">Save student</button><button class="soft" type="button" data-close="studentDialog">Cancel</button></div></form></div></dialog>
-<div id="toast" role="status"></div>
+<header><div class="brand"><div class="logo" aria-hidden="true">✓</div><div><h1>Pine Lake Student Check-In</h1><div class="sub">Tap your name to check in or check out</div></div></div><button class="admin" id="adminBtn" type="button">Admin</button></header>
+<main>
+<section class="filter"><input class="search" id="search" type="search" placeholder="Search students…" aria-label="Search students" autocomplete="off"><div class="letters" id="letters" aria-label="Filter by first letter"></div></section>
+<div class="meta"><span id="count">Loading…</span><span id="today"></span></div>
+<section id="cards" class="cards" aria-live="polite"></section>
+</main>
+<dialog id="auth"><div class="head"><h2 id="authTitle">Admin</h2><button class="close" data-close="auth" aria-label="Close" type="button">×</button></div><div class="body" id="authBody"></div></dialog>
+<dialog id="panel"><div class="head"><h2>Admin</h2><button class="close" data-close="panel" aria-label="Close" type="button">×</button></div><div class="body" id="panelBody"></div></dialog>
+<dialog id="studentDialog"><div class="head"><h2 id="studentTitle">Add student</h2><button class="close" data-close="studentDialog" aria-label="Close" type="button">×</button></div><div class="body"><form id="studentForm"><input id="studentId" type="hidden"><div class="field"><label for="studentName">Student name</label><input id="studentName" maxlength="80" required autocomplete="off"></div><div class="error" id="studentError"></div><div class="row"><button class="primary" type="submit">Save student</button><button class="soft" type="button" data-close="studentDialog">Cancel</button></div></form></div></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
 <script>
-const K={students:"plsc.students.v1",attendance:"plsc.attendance.v1",pass:"plsc.pass.v1"};
 const $=id=>document.getElementById(id);
-const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}};
-const write=(key,data)=>localStorage.setItem(key,JSON.stringify(data));
-let students=read(K.students,[]), attendance=read(K.attendance,[]), alpha="ALL", query="";
-$("today").textContent=new Intl.DateTimeFormat(undefined,{weekday:"short",month:"short",day:"numeric"}).format(new Date());
-function sorted(){return [...students].sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:"base"}))}
-function first(name){return (name.trim()[0]||"").toLocaleUpperCase()}
-function toast(msg){const el=$("toast");el.textContent=msg;el.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("show"),1800)}
+let students=[], alpha='ALL', query='', editingId='', loading=true;
+$('today').textContent=new Intl.DateTimeFormat(undefined,{weekday:'short',month:'short',day:'numeric'}).format(new Date());
+function toast(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(el.timer);el.timer=setTimeout(()=>el.classList.remove('show'),2000)}
+async function api(url,options={}){
+  const headers=Object.assign({},options.headers||{});
+  if(options.body)headers['Content-Type']='application/json';
+  const response=await fetch(url,Object.assign({credentials:'same-origin',cache:'no-store'},options,{headers}));
+  let payload={};try{payload=await response.json()}catch{}
+  if(!response.ok)throw new Error(payload.error||'The request could not be completed.');
+  return payload;
+}
 function render(){
- students=read(K.students,[]);attendance=read(K.attendance,[]);
- const letters=$("letters");letters.innerHTML="";
- const all=document.createElement("button");all.className="letter"+(alpha==="ALL"?" active":"");all.textContent="All";all.onclick=()=>{alpha="ALL";render()};letters.append(all);
- for(let n=65;n<=90;n++){const ch=String.fromCharCode(n),b=document.createElement("button");b.className="letter"+(alpha===ch?" active":"");b.textContent=ch;b.disabled=!students.some(s=>first(s.name)===ch);b.onclick=()=>{alpha=ch;render()};letters.append(b)}
- const shown=sorted().filter(s=>(alpha==="ALL"||first(s.name)===alpha)&&s.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
- $("count").textContent=shown.length+" student"+(shown.length===1?"":"s");const host=$("cards");host.innerHTML="";
- if(!shown.length){const e=document.createElement("div");e.className="empty";e.textContent=students.length?"No matching students. Try another letter or search.":"Ask an administrator to add students.";host.append(e);return}
- for(const s of shown){const inNow=attendance.some(a=>a.studentId===s.id&&!a.checkOut);const b=document.createElement("button");b.className="student"+(inNow?" checked":"");b.type="button";b.setAttribute("aria-label",s.name+(inNow?", checked in, tap to check out":", checked out, tap to check in"));const name=document.createElement("strong");name.textContent=s.name;const pill=document.createElement("span");pill.className="pill";pill.textContent=inNow?"CHECKED IN":"CHECKED OUT";b.append(name,pill);b.onclick=()=>toggle(s);host.append(b)}
+  const letters=$('letters');letters.innerHTML='';
+  const all=document.createElement('button');all.type='button';all.className='letter'+(alpha==='ALL'?' active':'');all.textContent='All';all.onclick=()=>{alpha='ALL';render()};letters.append(all);
+  for(let n=65;n<=90;n++){
+    const ch=String.fromCharCode(n),button=document.createElement('button');button.type='button';button.className='letter'+(alpha===ch?' active':'');button.textContent=ch;button.disabled=!students.some(s=>(s.name.trim()[0]||'').toUpperCase()===ch);button.onclick=()=>{alpha=ch;render()};letters.append(button)
+  }
+  const shown=students.filter(s=>(alpha==='ALL'||(s.name.trim()[0]||'').toUpperCase()===alpha)&&s.name.toLocaleLowerCase().includes(query.toLocaleLowerCase())).sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:'base'}));
+  $('count').textContent=loading?'Loading…':shown.length+' student'+(shown.length===1?'':'s');
+  const host=$('cards');host.innerHTML='';
+  if(loading)return;
+  if(!shown.length){const empty=document.createElement('div');empty.className='empty';empty.textContent=students.length?'No matching students. Try another letter or search.':'Ask an administrator to add students.';host.append(empty);return}
+  for(const s of shown){
+    const button=document.createElement('button');button.className='student'+(s.checked_in?' checked':'');button.type='button';
+    button.setAttribute('aria-label',s.name+(s.checked_in?', checked in, tap to check out':', checked out, tap to check in'));
+    const name=document.createElement('strong');name.textContent=s.name;
+    const pill=document.createElement('span');pill.className='pill';pill.textContent=s.checked_in?'CHECKED IN':'CHECKED OUT';
+    button.append(name,pill);
+    button.onclick=async()=>{button.disabled=true;try{const result=await api('/api/toggle',{method:'POST',body:JSON.stringify({studentId:s.id})});toast(s.name+(result.action==='check-in'?' checked in':' checked out'));await loadState()}catch(e){toast(e.message);button.disabled=false}}
+    host.append(button)
+  }
 }
-function toggle(s){const open=attendance.find(a=>a.studentId===s.id&&!a.checkOut),now=new Date().toISOString();if(open){open.checkOut=now;toast(s.name+" checked out")}else{attendance.unshift({id:crypto.randomUUID(),studentId:s.id,studentName:s.name,checkIn:now,checkOut:""});toast(s.name+" checked in")}write(K.attendance,attendance);render()}
-$("search").oninput=e=>{query=e.target.value.trim();render()};
-function csv(){const rows=[["Student","Check-in","Check-out"],...attendance.map(a=>[a.studentName,a.checkIn,a.checkOut||""])];const data=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\r\n");download("pine-lake-attendance-"+day()+".csv","text/csv;charset=utf-8",data)}
-function day(){return new Date().toISOString().slice(0,10)}
-function download(name,type,data){const url=URL.createObjectURL(new Blob([data],{type})),a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
-function backup(){download("pine-lake-backup-"+day()+".json","application/json",JSON.stringify({exportedAt:new Date().toISOString(),students,attendance},null,2))}
-function panel(){
- $("panelBody").innerHTML='<div class="row"><button class="primary" id="add">Add student</button><button class="soft" id="csv">Download attendance CSV</button><button class="soft" id="backup">Download full JSON backup</button></div><p class="notice">Data is saved only in this tablet’s browser. Download a JSON backup before clearing browser data or changing tablets. The passcode only hides admin controls here; it is not server-side security.</p><h3>Students ('+students.length+')</h3><div id="studentList"></div>';
- $("add").onclick=()=>editStudent();$("csv").onclick=csv;$("backup").onclick=backup;
- const list=$("studentList");sorted().forEach(s=>{const row=document.createElement("div");row.className="listrow";const n=document.createElement("strong");n.textContent=s.name;const tools=document.createElement("div");tools.className="tools";const e=document.createElement("button");e.className="small";e.textContent="Edit";e.onclick=()=>editStudent(s);const d=document.createElement("button");d.className="small";d.textContent="Delete";d.onclick=()=>removeStudent(s);tools.append(e,d);row.append(n,tools);list.append(row)})
+async function loadState(){
+  try{const result=await api('/api/state');students=result.students||[];loading=false;render()}
+  catch(e){loading=false;$('count').textContent='';$('cards').innerHTML='';const empty=document.createElement('div');empty.className='empty';empty.textContent=e.message+' Please ask an administrator for help.';$('cards').append(empty)}
 }
-function editStudent(s=null){$("studentTitle").textContent=s?"Edit student":"Add student";$("studentId").value=s?.id||"";$("studentName").value=s?.name||"";$("studentError").textContent="";$("studentDialog").showModal();setTimeout(()=>$("studentName").focus(),40)}
-$("studentForm").onsubmit=e=>{e.preventDefault();const name=$("studentName").value.trim().replace(/\s+/g," "),id=$("studentId").value;if(!name)return;if(students.some(s=>s.name.toLocaleLowerCase()===name.toLocaleLowerCase()&&s.id!==id)){$("studentError").textContent="That student is already listed.";return}
- if(id){students=students.map(s=>s.id===id?{...s,name}:s);attendance=attendance.map(a=>a.studentId===id?{...a,studentName:name}:a)}else students.push({id:crypto.randomUUID(),name});
- write(K.students,students);write(K.attendance,attendance);$("studentDialog").close();render();panel();toast(id?"Student updated":"Student added")}
-function removeStudent(s){if(!confirm("Remove "+s.name+" from the current student list? Past attendance will remain in downloads."))return;students=students.filter(x=>x.id!==s.id);write(K.students,students);render();panel();toast("Student removed")}
-async function hash(value){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
-function openAdmin(){
- const setup=!localStorage.getItem(K.pass);$("authTitle").textContent=setup?"Set admin passcode":"Admin passcode";
- $("authBody").innerHTML='<form id="authForm"><div class="field"><label for="pass">'+(setup?"Create passcode (4–12 characters)":"Enter passcode")+'</label><input id="pass" type="password" required minlength="'+(setup?4:1)+'" maxlength="12" autocomplete="current-password"></div>'+(setup?'<div class="field"><label for="again">Confirm passcode</label><input id="again" type="password" required minlength="4" maxlength="12" autocomplete="new-password"></div>':'')+'<div class="error" id="authError"></div><button class="primary" type="submit">'+(setup?"Save passcode":"Unlock admin")+'</button></form>';
- $("authForm").onsubmit=async e=>{e.preventDefault();const value=$("pass").value;if(setup){if(value!==$("again").value){$("authError").textContent="Passcodes do not match.";return}localStorage.setItem(K.pass,await hash(value));$("auth").close();panel();$("panel").showModal()}else if(await hash(value)===localStorage.getItem(K.pass)){$("auth").close();panel();$("panel").showModal()}else $("authError").textContent="Incorrect passcode."};
- $("auth").showModal();setTimeout(()=>$("pass").focus(),40)
+$('search').oninput=e=>{query=e.target.value.trim();alpha='ALL';render()};
+function showAuth(html,title){$('authTitle').textContent=title;$('authBody').innerHTML=html;$('auth').showModal()}
+function openSetup(){
+  showAuth('<p class="notice">Use the one-time setup code to create the admin passcode for this center. Choose at least 8 characters. The passcode will be protected on the server.</p><form id="setupForm"><div class="field"><label for="setupCode">One-time setup code</label><input id="setupCode" required autocomplete="off"></div><div class="field"><label for="newPass">Create admin passcode</label><input id="newPass" type="password" required minlength="8" maxlength="128" autocomplete="new-password"></div><div class="field"><label for="confirmPass">Confirm admin passcode</label><input id="confirmPass" type="password" required minlength="8" maxlength="128" autocomplete="new-password"></div><div class="error" id="authError"></div><button class="primary" type="submit">Create admin passcode</button></form>','Set up Admin');
+  $('setupForm').onsubmit=async e=>{e.preventDefault();const setupCode=$('setupCode').value.trim(),passcode=$('newPass').value;if(passcode!==$('confirmPass').value){$('authError').textContent='The passcodes do not match.';return}
+    try{await api('/api/admin/setup',{method:'POST',body:JSON.stringify({setupCode,passcode})});$('auth').close();await openPanel()}catch(err){$('authError').textContent=err.message}}
 }
-$("adminBtn").onclick=openAdmin;
-document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$(b.dataset.close).close());
-render();
+function openLogin(){
+  showAuth('<p class="notice">Enter the admin passcode to manage students.</p><form id="loginForm"><div class="field"><label for="adminPass">Admin passcode</label><input id="adminPass" type="password" required autocomplete="current-password"></div><div class="error" id="authError"></div><button class="primary" type="submit">Unlock Admin</button></form>','Admin sign in');
+  $('loginForm').onsubmit=async e=>{e.preventDefault();try{await api('/api/admin/login',{method:'POST',body:JSON.stringify({passcode:$('adminPass').value})});$('auth').close();await openPanel()}catch(err){$('authError').textContent=err.message}}
+}
+async function openAdmin(){
+  try{const status=await api('/api/admin/session');if(!status.configured)openSetup();else if(status.authenticated)await openPanel();else openLogin()}
+  catch(e){showAuth('<p class="notice">'+e.message+' The cloud connection may still be getting set up.</p>','Admin');}
+}
+$('adminBtn').onclick=openAdmin;
+async function openPanel(){
+  try{
+    const result=await api('/api/admin/students');const list=result.students||[];
+    const body=$('panelBody');body.innerHTML='';
+    const actions=document.createElement('div');actions.className='row';
+    const add=document.createElement('button');add.className='primary';add.type='button';add.textContent='Add student';add.onclick=()=>editStudent();
+    const csvButton=document.createElement('button');csvButton.className='soft';csvButton.type='button';csvButton.textContent='Download attendance CSV';csvButton.onclick=()=>downloadExport('csv');
+    const jsonButton=document.createElement('button');jsonButton.className='soft';jsonButton.type='button';jsonButton.textContent='Download full JSON backup';jsonButton.onclick=()=>downloadExport('json');
+    actions.append(add,csvButton,jsonButton);body.append(actions);
+    const note=document.createElement('p');note.className='notice';note.textContent='Student names and attendance are stored in the center’s secure cloud database, not in this tablet’s browser. Download a backup when needed.';body.append(note);
+    const heading=document.createElement('h3');heading.textContent='Students ('+list.filter(s=>s.active).length+')';body.append(heading);
+    const host=document.createElement('div');
+    for(const student of list.filter(s=>s.active)){
+      const row=document.createElement('div');row.className='listrow';const name=document.createElement('strong');name.textContent=student.name;const tools=document.createElement('div');tools.className='tools';
+      const edit=document.createElement('button');edit.className='small';edit.type='button';edit.textContent='Edit';edit.onclick=()=>editStudent(student);
+      const del=document.createElement('button');del.className='small danger';del.type='button';del.textContent='Delete';del.onclick=()=>deleteStudent(student);
+      tools.append(edit,del);row.append(name,tools);host.append(row)
+    }
+    if(!list.some(s=>s.active)){const empty=document.createElement('p');empty.className='notice';empty.textContent='No students yet. Add the first student.';host.append(empty)}
+    body.append(host);
+    const logout=document.createElement('button');logout.className='soft';logout.type='button';logout.textContent='Lock Admin';logout.style.marginTop='16px';logout.onclick=async()=>{try{await api('/api/admin/logout',{method:'POST',body:'{}'})}catch{}$('panel').close()};body.append(logout);
+    $('panel').showModal();
+  }catch(e){toast(e.message);if(e.message.includes('unlock'))openLogin()}
+}
+function editStudent(student){
+  editingId=student?student.id:'';$('studentTitle').textContent=student?'Edit student':'Add student';$('studentId').value=editingId;$('studentName').value=student?student.name:'';$('studentError').textContent='';$('studentDialog').showModal();setTimeout(()=>$('studentName').focus(),50)
+}
+$('studentForm').onsubmit=async e=>{e.preventDefault();const name=$('studentName').value.trim().replace(/\s+/g,' ');if(!name)return;const url=editingId?'/api/admin/students/'+encodeURIComponent(editingId):'/api/admin/students';try{await api(url,{method:editingId?'PATCH':'POST',body:JSON.stringify({name})});$('studentDialog').close();await loadState();await openPanel();toast(editingId?'Student updated.':'Student added.')}catch(err){$('studentError').textContent=err.message}};
+async function deleteStudent(student){if(!confirm('Remove '+student.name+' from the active list? Past attendance will remain in reports.'))return;try{await api('/api/admin/students/'+encodeURIComponent(student.id),{method:'DELETE'});await loadState();await openPanel();toast('Student removed.')}catch(e){toast(e.message)}}
+function csvCell(value){return '"'+String(value??'').replace(/"/g,'""')+'"'}
+async function downloadExport(format){
+  try{const data=await api('/api/admin/export');const date=new Date().toISOString().slice(0,10);
+    if(format==='json'){downloadFile('pine-lake-checkin-backup-'+date+'.json','application/json',JSON.stringify({exportedAt:new Date().toISOString(),students:data.students,attendance:data.attendance},null,2));return}
+    const rows=[['Student','Action','Date','Time']];
+    for(const event of data.attendance){const when=new Date(event.occurred_at);rows.push([event.student_name,event.action==='check-in'?'Check in':'Check out',when.toLocaleDateString(),when.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})])}
+    downloadFile('pine-lake-attendance-'+date+'.csv','text/csv;charset=utf-8','\ufeff'+rows.map(row=>row.map(csvCell).join(',')).join('\r\n'))
+  }catch(e){toast(e.message)}
+}
+function downloadFile(name,type,content){const url=URL.createObjectURL(new Blob([content],{type}));const link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+document.querySelectorAll('[data-close]').forEach(button=>button.onclick=()=>$(button.dataset.close).close());
+$('auth').addEventListener('click',e=>{if(e.target===$('auth'))$('auth').close()});
+$('panel').addEventListener('click',e=>{if(e.target===$('panel'))$('panel').close()});
+loadState();
 </script>
 </body></html>

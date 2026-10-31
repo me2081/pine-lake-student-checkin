@@ -1,13 +1,17 @@
 # Pine Lake Student Check-In
 
-A simple tablet app for student check-in and check-out.
+Public tablet interface for student check-in and check-out. Student names and attendance are stored in a dedicated Neon Postgres database and accessed through Vercel serverless API routes. The browser does not write student records to local storage.
 
-## Data
+## Cloud configuration
 
-The app stores student names, attendance, and the admin passcode verifier in the tablet browser's local storage. Data does not sync to other devices. Download the JSON backup regularly before clearing browser data or changing tablets.
+Create these Vercel Production environment variables as Sensitive:
 
-The admin passcode only hides the admin controls in this browser. It is not server-side authentication; do not store sensitive information in this app.
+- DATABASE_URL: pooled Neon connection string for the checkin_app role
+- CHECKIN_SESSION_SECRET: a random 64-character hex string
+- CHECKIN_SETUP_TOKEN: a one-time random token for first admin setup
 
-## Run
+Do not commit these values to GitHub. The first admin uses CHECKIN_SETUP_TOKEN once to set the real admin passcode; after setup, the endpoint refuses further setup attempts. Admin sessions use secure, HTTP-only cookies. Admin login is limited after repeated failed attempts.
 
-Open `index.html` in a browser, or deploy this static repository with Vercel.
+## Database
+
+The schema is in db/migrations/001_checkin_schema.sql. It is applied to the dedicated pine-lake-student-checkin Neon project, not the Parent Manager or MatchFlow databases.

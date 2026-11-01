@@ -26,6 +26,12 @@ main{max-width:920px;margin:auto;padding:22px 16px 36px}.admin,.soft,.primary,.d
 .confirm-actions button{min-height:54px;font-size:18px}
 .checkin-confirmation[hidden]{display:none}
 .student-admin-info{display:grid;gap:4px}
+.attendance-status{font-size:14px;font-weight:750}
+.attendance-status.checked-in{color:#167448}
+.attendance-status.checked-in::before{content:"";display:inline-block;width:10px;height:10px;margin-right:7px;border-radius:50%;background:#20a464}
+.attendance-status.checked-out{color:#69768a}
+.attendance-status.checked-out::before{content:"";display:inline-block;width:10px;height:10px;margin-right:7px;border-radius:50%;background:#aab4c1}
+.attendance-updated{font-size:13px;color:#68778d;margin:8px 0}
 .code-badge{font-size:13px;letter-spacing:.08em;color:#52647c;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .letters{display:flex;gap:6px;flex-wrap:wrap}.letter{height:35px;min-width:34px;border:0;border-radius:9px;background:#f0f3f7;color:#46546a;font-weight:750}.letter.active{background:#1769c2;color:white}.letter:disabled{opacity:.32}
 .meta{display:flex;justify-content:space-between;color:#68778d;font-size:14px;padding:15px 2px 10px}.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:11px}
@@ -155,6 +161,19 @@ async function openAdmin(){
   catch(e){showAuth('<p class="notice">'+e.message+' The cloud connection may still be getting set up.</p>','Admin');}
 }
 $('adminBtn').onclick=openAdmin;
+let adminAttendanceTimer=null;
+function setAttendanceStatus(element,action){
+  element.className='attendance-status '+(action==='check-in'?'checked-in':'checked-out');
+  element.textContent=action==='check-in'?'Checked in':action==='check-out'?'Checked out':'Not checked in';
+}
+async function refreshAdminStatuses(){
+  try{
+    const result=await api('/api/admin/students');
+    const latest=new Map((result.students||[]).map(student=>[String(student.id),student.latest_action]));
+    document.querySelectorAll('[data-attendance-student]').forEach(element=>setAttendanceStatus(element,latest.get(element.dataset.attendanceStudent)));
+    if($('attendanceUpdated'))$('attendanceUpdated').textContent='Updated '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+  }catch(error){if($('attendanceUpdated'))$('attendanceUpdated').textContent='Could not refresh attendance.'}
+}
 async function openPanel(){
   try{
     const result=await api('/api/admin/students');const list=result.students||[];
@@ -164,12 +183,14 @@ async function openPanel(){
     const csvButton=document.createElement('button');csvButton.className='soft';csvButton.type='button';csvButton.textContent='Download attendance CSV';csvButton.onclick=()=>downloadExport('csv');
     const jsonButton=document.createElement('button');jsonButton.className='soft';jsonButton.type='button';jsonButton.textContent='Download full JSON backup';jsonButton.onclick=()=>downloadExport('json');
     const codesButton=document.createElement('button');codesButton.className='soft';codesButton.type='button';codesButton.textContent='Download student codes PDF';codesButton.onclick=()=>downloadCodesPdf(list.filter(student=>student.active));
-    actions.append(add,csvButton,jsonButton,codesButton);body.append(actions);
+    const refreshButton=document.createElement('button');refreshButton.className='soft';refreshButton.type='button';refreshButton.textContent='Refresh attendance';refreshButton.onclick=refreshAdminStatuses;
+    actions.append(add,csvButton,jsonButton,codesButton,refreshButton);body.append(actions);
+    const attendanceUpdated=document.createElement('p');attendanceUpdated.className='attendance-updated';attendanceUpdated.id='attendanceUpdated';attendanceUpdated.textContent='Attendance refreshes automatically every 15 seconds.';body.append(attendanceUpdated);
     const note=document.createElement('p');note.className='notice';note.textContent='Student names and attendance are stored in the center’s secure cloud database, not in this tablet’s browser. Student codes are visible here for staff if a student forgets.';body.append(note);
     const heading=document.createElement('h3');heading.textContent='Students ('+list.filter(s=>s.active).length+')';body.append(heading);
     const host=document.createElement('div');
     for(const student of list.filter(s=>s.active)){
-      const row=document.createElement('div');row.className='listrow';const info=document.createElement('div');info.className='student-admin-info';const name=document.createElement('strong');name.textContent=student.name;const code=document.createElement('span');code.className='code-badge';code.textContent='Student code: '+student.student_code;info.append(name,code);const tools=document.createElement('div');tools.className='tools';
+      const row=document.createElement('div');row.className='listrow';const info=document.createElement('div');info.className='student-admin-info';const name=document.createElement('strong');name.textContent=student.name;const status=document.createElement('span');status.dataset.attendanceStudent=student.id;setAttendanceStatus(status,student.latest_action);const code=document.createElement('span');code.className='code-badge';code.textContent='Student code: '+student.student_code;info.append(name,status,code);const tools=document.createElement('div');tools.className='tools';
       const edit=document.createElement('button');edit.className='small';edit.type='button';edit.textContent='Edit';edit.onclick=()=>editStudent(student);
       const del=document.createElement('button');del.className='small danger';del.type='button';del.textContent='Delete';del.onclick=()=>deleteStudent(student);
       tools.append(edit,del);row.append(info,tools);host.append(row)
@@ -178,6 +199,8 @@ async function openPanel(){
     body.append(host);
     const logout=document.createElement('button');logout.className='soft';logout.type='button';logout.textContent='Lock Admin';logout.style.marginTop='16px';logout.onclick=async()=>{try{await api('/api/admin/logout',{method:'POST',body:'{}'})}catch{}$('panel').close()};body.append(logout);
     if(!$('panel').open)$('panel').showModal();
+    if(adminAttendanceTimer)clearInterval(adminAttendanceTimer);
+    adminAttendanceTimer=setInterval(()=>{if($('panel').open)refreshAdminStatuses()},15000);
   }catch(e){toast(e.message);if(e.message.includes('unlock'))openLogin()}
 }
 function editStudent(student){
@@ -243,6 +266,7 @@ function downloadFile(name,type,content){const url=URL.createObjectURL(new Blob(
 document.querySelectorAll('[data-close]').forEach(button=>button.onclick=()=>$(button.dataset.close).close());
 $('auth').addEventListener('click',e=>{if(e.target===$('auth'))$('auth').close()});
 $('panel').addEventListener('click',e=>{if(e.target===$('panel'))$('panel').close()});
+$('panel').addEventListener('close',()=>{if(adminAttendanceTimer){clearInterval(adminAttendanceTimer);adminAttendanceTimer=null}});
 
 </script>
 </body></html>

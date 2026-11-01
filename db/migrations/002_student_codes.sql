@@ -1,17 +1,9 @@
 -- Add per-student 3-digit codes for the public tablet check-in screen.
-DO $$
-BEGIN
-  IF (SELECT count(*) FROM public.checkin_students) > 999 THEN
-    RAISE EXCEPTION '3-digit student codes support up to 999 students';
-  END IF;
-END
-$$;
-
 ALTER TABLE public.checkin_students ADD COLUMN IF NOT EXISTS student_code text;
 
 -- Assign unique starter codes to any students already in the database.
 WITH numbered AS (
-  SELECT id, row_number() OVER (ORDER BY created_at, id) AS n
+  SELECT id, row_number() OVER (ORDER BY md5(id)) AS n
   FROM public.checkin_students
   WHERE student_code IS NULL
 )

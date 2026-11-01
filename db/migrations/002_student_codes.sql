@@ -3,7 +3,7 @@ ALTER TABLE public.checkin_students ADD COLUMN IF NOT EXISTS student_code text;
 
 -- Assign unique starter codes to any students already in the database.
 WITH numbered AS (
-  SELECT id, row_number() OVER (ORDER BY md5(id)) AS n
+  SELECT id, row_number() OVER (ORDER BY md5(id::text)) AS n
   FROM public.checkin_students
   WHERE student_code IS NULL
 )

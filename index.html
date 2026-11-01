@@ -71,7 +71,7 @@ async function api(url,options={}){
   if(options.body)headers['Content-Type']='application/json';
   const response=await fetch(url,Object.assign({credentials:'same-origin',cache:'no-store'},options,{headers}));
   let payload={};try{payload=await response.json()}catch{}
-  if(!response.ok)throw new Error(payload.error||'The request could not be completed.');
+  if(!response.ok){const error=new Error(payload.error||'The request could not be completed.');error.status=response.status;throw error;}
   return payload;
 }
 let pendingCheckin=null;

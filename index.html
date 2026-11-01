@@ -19,6 +19,12 @@ main{max-width:920px;margin:auto;padding:22px 16px 36px}.admin,.soft,.primary,.d
 .checkin-help{margin:16px 0 4px}
 .checkin-message{min-height:34px;margin-top:14px;font-size:18px;font-weight:750;color:#1769c2}
 .checkin-message.error{color:#a5332b}
+.checkin-confirmation{max-width:420px;margin:18px auto 0;padding:20px;border:1px solid #dce5ef;border-radius:14px;background:#f8fbff}
+.confirm-question{margin:0 0 8px;color:#52647c;font-size:18px}
+.confirm-student{margin:0 0 18px;font-size:clamp(24px,5vw,34px);font-weight:800;overflow-wrap:anywhere}
+.confirm-actions{display:grid;gap:10px}
+.confirm-actions button{min-height:54px;font-size:18px}
+.checkin-confirmation[hidden]{display:none}
 .student-admin-info{display:grid;gap:4px}
 .code-badge{font-size:13px;letter-spacing:.08em;color:#52647c;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .letters{display:flex;gap:6px;flex-wrap:wrap}.letter{height:35px;min-width:34px;border:0;border-radius:9px;background:#f0f3f7;color:#46546a;font-weight:750}.letter.active{background:#1769c2;color:white}.letter:disabled{opacity:.32}
@@ -35,11 +41,19 @@ dialog{border:0;border-radius:19px;padding:0;width:min(600px,calc(100% - 24px));
 <section class="code-panel">
   <p class="code-instruction">Enter your 3-digit student code.</p>
   <form id="checkinForm">
-    <input class="student-code-input" id="studentCode" type="text" inputmode="numeric" pattern="[0-9]{3}" maxlength="3" placeholder="••••••" aria-label="3-digit student code" autocomplete="off" required>
+    <input class="student-code-input" id="studentCode" type="text" inputmode="numeric" pattern="[0-9]{3}" maxlength="3" placeholder="•••" aria-label="3-digit student code" autocomplete="off" required>
     <button class="primary checkin-submit" id="checkinSubmit" type="submit">Check in / check out</button>
   </form>
-  <p class="checkin-help">Forgot your code? Ask an instructor.</p>
+  <p class="checkin-help" id="checkinHelp">Forgot your code? Ask an instructor.</p>
   <div id="checkinMessage" class="checkin-message" role="status" aria-live="polite"></div>
+  <div id="checkinConfirmation" class="checkin-confirmation" hidden aria-live="polite">
+    <p class="confirm-question">Is this you?</p>
+    <p class="confirm-student" id="confirmStudentName"></p>
+    <div class="confirm-actions">
+      <button class="primary" id="confirmAttendance" type="button">Yes, check in</button>
+      <button class="soft" id="cancelConfirmation" type="button">That’s not me</button>
+    </div>
+  </div>
   <div class="today-label" id="today"></div>
 </section>
 </main>
@@ -57,28 +71,74 @@ async function api(url,options={}){
   if(options.body)headers['Content-Type']='application/json';
   const response=await fetch(url,Object.assign({credentials:'same-origin',cache:'no-store'},options,{headers}));
   let payload={};try{payload=await response.json()}catch{}
-  if(!response.ok)throw new Error(payload.error||'The request could not be completed.');
+  if(!response.ok){const error=new Error(payload.error||'The request could not be completed.');error.status=response.status;throw error;}
   return payload;
+}
+let pendingCheckin=null;
+function resetCheckin(){
+  pendingCheckin=null;
+  $('checkinConfirmation').hidden=true;
+  $('checkinForm').hidden=false;
+  $('checkinHelp').hidden=false;
+  $('studentCode').value='';
+  $('checkinMessage').textContent='';
+  $('checkinMessage').className='checkin-message';
+  $('studentCode').focus();
 }
 async function submitCheckin(event){
   event.preventDefault();
   const code=$('studentCode').value.trim();
   const message=$('checkinMessage');
   if(! /^[0-9]{3}$/.test(code)){message.textContent='Enter the 3-digit code from your card.';message.className='checkin-message error';return}
-  const button=$('checkinSubmit');button.disabled=true;message.textContent='Checking…';message.className='checkin-message';
+  const button=$('checkinSubmit');button.disabled=true;message.textContent='Looking up your name…';message.className='checkin-message';
   try{
-    const result=await api('/api/checkin',{method:'POST',body:JSON.stringify({code})});
-    message.textContent=(result.action==='check-in'?'Checked in successfully.':'Checked out successfully.');
-    message.className='checkin-message';
-    $('studentCode').value='';
-    setTimeout(()=>{if(message.textContent.endsWith('successfully.'))message.textContent=''},5000);
+    const result=await api('/api/checkin',{method:'POST',body:JSON.stringify({code,preview:true})});
+    pendingCheckin={code,name:result.name,action:result.action};
+    $('confirmStudentName').textContent=result.name;
+    $('confirmAttendance').textContent=result.action==='check-in'?'Yes, check in':'Yes, check out';
+    $('checkinForm').hidden=true;
+    $('checkinHelp').hidden=true;
+    message.textContent='';
+    $('checkinConfirmation').hidden=false;
+    $('confirmAttendance').focus();
   }catch(error){
     message.textContent=error.message;
     message.className='checkin-message error';
     $('studentCode').select();
-  }finally{button.disabled=false;$('studentCode').focus()}
+  }finally{button.disabled=false}
+}
+async function confirmCheckin(){
+  if(!pendingCheckin)return;
+  const button=$('confirmAttendance');
+  button.disabled=true;
+  $('cancelConfirmation').disabled=true;
+  $('checkinMessage').textContent='Saving…';
+  $('checkinMessage').className='checkin-message';
+  try{
+    const result=await api('/api/checkin',{method:'POST',body:JSON.stringify({code:pendingCheckin.code,expectedAction:pendingCheckin.action})});
+    $('checkinConfirmation').hidden=true;
+    $('checkinMessage').textContent=pendingCheckin.name+' '+(result.action==='check-in'?'checked in.':'checked out.');
+    $('checkinMessage').className='checkin-message';
+    $('checkinForm').hidden=false;
+    $('checkinHelp').hidden=false;
+    $('studentCode').value='';
+    pendingCheckin=null;
+    const successMessage=$('checkinMessage').textContent;
+    setTimeout(()=>{if($('checkinMessage').textContent===successMessage)$('checkinMessage').textContent=''},5000);
+  }catch(error){
+    if(error.status===409){
+      resetCheckin();
+      $('checkinMessage').textContent='Attendance changed. Please enter your code again.';
+      $('checkinMessage').className='checkin-message error';
+    }else{
+      $('checkinMessage').textContent=error.message;
+      $('checkinMessage').className='checkin-message error';
+    }
+  }finally{button.disabled=false;$('cancelConfirmation').disabled=false}
 }
 $('checkinForm').onsubmit=submitCheckin;
+$('confirmAttendance').onclick=confirmCheckin;
+$('cancelConfirmation').onclick=resetCheckin;
 $('studentCode').oninput=()=>{if($('checkinMessage').classList.contains('error')){$('checkinMessage').textContent='';$('checkinMessage').className='checkin-message'}};
 function showAuth(html,title){$('authTitle').textContent=title;$('authBody').innerHTML=html;$('auth').showModal()}
 function openSetup(){

@@ -163,7 +163,8 @@ async function openPanel(){
     const add=document.createElement('button');add.className='primary';add.type='button';add.textContent='Add student';add.onclick=()=>editStudent();
     const csvButton=document.createElement('button');csvButton.className='soft';csvButton.type='button';csvButton.textContent='Download attendance CSV';csvButton.onclick=()=>downloadExport('csv');
     const jsonButton=document.createElement('button');jsonButton.className='soft';jsonButton.type='button';jsonButton.textContent='Download full JSON backup';jsonButton.onclick=()=>downloadExport('json');
-    actions.append(add,csvButton,jsonButton);body.append(actions);
+    const codesButton=document.createElement('button');codesButton.className='soft';codesButton.type='button';codesButton.textContent='Download student codes PDF';codesButton.onclick=()=>downloadCodesPdf(list.filter(student=>student.active));
+    actions.append(add,csvButton,jsonButton,codesButton);body.append(actions);
     const note=document.createElement('p');note.className='notice';note.textContent='Student names and attendance are stored in the center’s secure cloud database, not in this tablet’s browser. Student codes are visible here for staff if a student forgets.';body.append(note);
     const heading=document.createElement('h3');heading.textContent='Students ('+list.filter(s=>s.active).length+')';body.append(heading);
     const host=document.createElement('div');
@@ -192,6 +193,51 @@ async function downloadExport(format){
     for(const event of data.attendance){const when=new Date(event.occurred_at);rows.push([event.student_name,event.action==='check-in'?'Check in':'Check out',when.toLocaleDateString(),when.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})])}
     downloadFile('pine-lake-attendance-'+date+'.csv','text/csv;charset=utf-8','\ufeff'+rows.map(row=>row.map(csvCell).join(',')).join('\r\n'))
   }catch(e){toast(e.message)}
+}
+function downloadCodesPdf(students){
+  const ascii=value=>String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[’‘]/g,"'").replace(/[“”]/g,'"').replace(/[–—]/g,'-').replace(/[^\x20-\x7E]/g,'?');
+  const pdfText=value=>ascii(value).replace(/([\\()])/g,'\\$1');
+  const sorted=students.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  const groups=[];
+  for(let i=0;i<sorted.length;i+=36)groups.push(sorted.slice(i,i+36));
+  if(!groups.length)groups.push([]);
+  const pageIds=groups.map((_,i)=>4+i*2);
+  const objects=[];
+  objects[1]='<< /Type /Catalog /Pages 2 0 R >>';
+  objects[2]='<< /Type /Pages /Kids ['+pageIds.map(id=>id+' 0 R').join(' ')+'] /Count '+pageIds.length+' >>';
+  objects[3]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+  const now=new Date();
+  const date=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  groups.forEach((group,pageIndex)=>{
+    const pageId=pageIds[pageIndex],contentId=pageId+1;
+    const lines=[
+      'BT /F1 18 Tf 48 748 Td (Pine Lake Student Check-In - Student Codes) Tj ET',
+      'BT /F1 10 Tf 48 728 Td (STAFF COPY - Keep private. Give each student only their own code.) Tj ET',
+      'BT /F1 9 Tf 48 710 Td (Generated '+date+') Tj ET',
+      'BT /F1 11 Tf 48 684 Td (Student name) Tj ET',
+      'BT /F1 11 Tf 510 684 Td (Code) Tj ET',
+      '48 676 m 564 676 l S'
+    ];
+    if(!group.length)lines.push('BT /F1 11 Tf 48 650 Td (No active students yet.) Tj ET');
+    group.forEach((student,row)=>{
+      const y=658-row*16;
+      lines.push('BT /F1 10 Tf 48 '+y+' Td ('+pdfText(student.name)+') Tj ET');
+      lines.push('BT /F1 12 Tf 510 '+y+' Td ('+pdfText(student.student_code)+') Tj ET');
+      lines.push('48 '+(y-5)+' m 564 '+(y-5)+' l S');
+    });
+    lines.push('BT /F1 9 Tf 500 30 Td (Page '+(pageIndex+1)+' of '+groups.length+') Tj ET');
+    const content=lines.join('\n');
+    objects[pageId]='<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents '+contentId+' 0 R >>';
+    objects[contentId]='<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream';
+  });
+  let pdf='%PDF-1.4\n';
+  const offsets=[0];
+  for(let id=1;id<objects.length;id++){offsets[id]=pdf.length;pdf+=id+' 0 obj\n'+objects[id]+'\nendobj\n'}
+  const xref=pdf.length;
+  pdf+='xref\n0 '+objects.length+'\n0000000000 65535 f \n';
+  for(let id=1;id<objects.length;id++)pdf+=String(offsets[id]).padStart(10,'0')+' 00000 n \n';
+  pdf+='trailer\n<< /Size '+objects.length+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';
+  downloadFile('pine-lake-student-codes-'+date+'.pdf','application/pdf',pdf);
 }
 function downloadFile(name,type,content){const url=URL.createObjectURL(new Blob([content],{type}));const link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 document.querySelectorAll('[data-close]').forEach(button=>button.onclick=()=>$(button.dataset.close).close());

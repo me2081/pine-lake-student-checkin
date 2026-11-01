@@ -64,7 +64,7 @@ async function submitCheckin(event){
   event.preventDefault();
   const code=$('studentCode').value.trim();
   const message=$('checkinMessage');
-  if(!/^\\d{6}$/.test(code)){message.textContent='Enter the 6-digit code from your card.';message.className='checkin-message error';return}
+  if(! /^[0-9]{6}$/.test(code)){message.textContent='Enter the 6-digit code from your card.';message.className='checkin-message error';return}
   const button=$('checkinSubmit');button.disabled=true;message.textContent='Checking…';message.className='checkin-message';
   try{
     const result=await api('/api/checkin',{method:'POST',body:JSON.stringify({code})});

@@ -1,6 +1,6 @@
 # Pine Lake Student Check-In
 
-Public tablet interface for student check-in and check-out. Students enter a 6-digit code; the public screen does not download or display the roster. The admin-only panel shows each student’s code for staff to retrieve when needed. Names and attendance are stored in a dedicated Neon Postgres database and accessed through Vercel serverless API routes. The browser does not write student records to local storage.
+Public tablet interface for student check-in and check-out. Students enter a 3-digit code; the public screen does not download or display the roster. The admin-only panel shows each student’s code for staff to retrieve when needed. Names and attendance are stored in a dedicated Neon Postgres database and accessed through Vercel serverless API routes. The browser does not write student records to local storage.
 
 ## Cloud configuration
 
